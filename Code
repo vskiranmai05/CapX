@@ -1,0 +1,145 @@
+#installing kaggle library
+! pip install kaggle
+#configuring the path of Kaggle.json file
+! mkdir ~/.kaggle
+! cp kaggle.json ~/.kaggle/
+! chmod 600 ~/.kaggle/kaggle.json
+#importing the dependencies 
+import numpy as np
+import pandas as pd
+import re
+from nltk.corpus import stopwords
+from nltk.stem.porter import PorterStemmer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+import nltk
+nltk.download('stopwords')
+#printing the stopwords in English
+print(stopwords.words('english'))
+#data processing
+#loading the data from csv file to dataframe
+twitter_data = pd.read_csv('/content/training.1600000.processed.noemoticon.csv',encoding = 'ISO-8859-1')
+#checking the number of rows and columns
+twitter_data.shape
+#printing the first 5 rows of the dataframe
+twitter_data.head()
+#naming the column and reading the dataset again
+
+column_names = ['target','id','date','flag','user','text']
+twitter_data = pd.read_csv('/content/training.1600000.processed.noemoticon.csv',encoding = 'ISO-8859-1',names = column_names)
+#checking the number of rows and columns
+twitter_data.shape
+#counting the number of missing values in the dataset
+twitter_data.isnull().sum()
+#checking the distribution of target column
+twitter_data['target'].value_counts()
+#convert the target '4' to '1'
+twitter_data.replace({'target':{4:1}},inplace = True)
+twitter_data['target'].value_counts()
+#0--> negative tweet
+#1--> positive tweet
+#streaming
+#streaming is the process of reducing a word to its root word
+port_stem = PorterStemmer()
+def stemming(content):
+  stemmed_content = re.sub('[^a-zA-Z]',' ',content)
+  stemmed_content = stemmed_content.lower()
+  stemmed_content = stemmed_content.split()
+  stemmed_content = [port_stem.stem(word) for word in stemmed_content if not word in stopwords.words('english')]
+  stemmed_content = ' '.join(stemmed_content)
+  return stemmed_content
+print(twitter_data['text'].head())
+print(twitter_data['text'].dtype)
+twitter_data['text'] = twitter_data['text'].fillna('').astype(str)
+def stemming(text):
+    if not isinstance(text, str):
+        return ''
+twitter_data['stemmed_content'] = twitter_data['text'].apply(stemming)
+twitter_data.head()
+print(twitter_data['stemmed_content'])
+print(twitter_data['target'])
+#separating the data and label
+X = twitter_data['stemmed_content'].values
+Y = twitter_data['target'].values
+print(X)
+print(Y)
+print(Y[:5])  # Display the first 5 elements
+print(Y.dtype)
+Y = Y.astype(str)
+import pandas as pd
+Y = pd.to_numeric(Y, errors='coerce')  # Convert; invalid entries become NaN
+from sklearn.utils import shuffle
+
+valid_indices = ~np.isnan(Y)  # Identify non-NaN indices
+X, Y = X[valid_indices], Y[valid_indices]  # Filter valid data
+print(np.unique(Y))
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, stratify=Y, random_state=2)
+print(X.shape, X_train.shape, X_test.shape)
+
+print(X_train)
+print(X_test)
+print([i for i, x in enumerate(X_train) if x is None or x == ""])  # Indices of None or empty string in X_train
+print([i for i, x in enumerate(X_test) if x is None or x == ""])   # Indices of None or empty string in X_test
+X_train = np.array([x if x is not None and x != "" else "missing" for x in X_train])
+X_test = np.array([x if x is not None and x != "" else "missing" for x in X_test])
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+vectorizer = TfidfVectorizer()
+
+X_train = vectorizer.fit_transform(X_train)
+X_test = vectorizer.transform(X_test)
+print(X_train)
+print(X_test)
+#training the machine lerning model
+#logistic Regression
+model = LogisticRegression(max_iter=1000)
+model.fit(X_train, Y_train)
+#Model Evaluation
+#Accuracy Score
+X_train_prediction = model.predict(X_train)
+training_data_accuracy = accuracy_score(Y_train, X_train_prediction)
+print('Accuracy score on the training data:', training_data_accuracy)
+X_test_prediction = model.predict(X_test)
+training_data_accuracy = accuracy_score(Y_test, X_test_prediction)
+from sklearn.metrics import accuracy_score
+
+# Assuming your model is named `model` and you're predicting on `X_train`
+y_pred_train = model.predict(X_train)
+training_data_accuracy = accuracy_score(Y_train, y_pred_train)
+
+print('Accuracy score on the training data:', training_data_accuracy)
+y_pred_test = model.predict(X_test)
+testing_data_accuracy = accuracy_score(Y_test, y_pred_test)
+
+print('Accuracy score on the test data:', testing_data_accuracy)
+#model accuracy = 77.8%
+#saving the trained model
+import pickle
+filename = 'trained_model.sav'
+pickle.dump(model, open(filename, 'wb'))
+#loading the saved model
+loaded_model = pickle.load(open('/content/trained_model.sav', 'rb'))
+X_new = X_test[200]
+print(Y_test[200])
+
+prediction = loaded_model.predict(X_new)
+print(prediction)
+
+if(prediction[0]==0):
+  print("Negative Tweet")
+else:
+  print("Positive Tweet")
+X_new = X_test[3]
+print(Y_test[3])
+
+prediction = loaded_model.predict(X_new)
+print(prediction)
+
+if(prediction[0]==0):
+  print("Negative Tweet")
+else:
+  print("Positive Tweet")
