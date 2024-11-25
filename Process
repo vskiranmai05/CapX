@@ -1,0 +1,7 @@
+Data Preprocessing
+Text Cleaning:
+Remove stop words, special characters, and irrelevant text.
+Normalize text (e.g., convert to lowercase).
+Tokenization: Break sentences into words for easier analysis.
+Lemmatization/Stemming: Convert words to their base forms.
+Noise Removal: Exclude irrelevant posts using filters (e.g., keyword matching for stock symbols).
